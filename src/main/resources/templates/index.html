@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Title</title>
+    <script type="text/javascript" th:src="@{jquery-3.3.1.js}"></script>
+    <script type="text/javascript" th:src="@{sockjs.min.js}"></script>
+    <script type="text/javascript" th:src="@{stomp.min.js}"></script>
+</head>
+<body>
+<form id="wiselyForm">
+    <textarea rows="4" cols="60" name="text"></textarea>
+    <br/>
+    <input type="submit"/>
+</form>
+<script th:inline="javascript">
+
+    $('#wiselyForm').submit(function (e) {
+        e.preventDefault();
+        var text = $('#wiselyForm').find('textarea[name= "text"]').val();
+        sendMessage(text);
+    })
+
+    var sock = new SockJS("chatroom");
+    var stomp = Stomp.over(sock);
+    stomp.connect("guest", "guest", function (frame) {
+       console.log("Connected");
+       stomp.subscribe("/user/queue/notifications", handleNotification);
+    });
+    function handleNotification(message) {
+        $('#output').append("<b>Received: " + message.body + "</b><br/>")
+    }
+
+    function sendMessage(text) {
+        stomp.send("/chat", {}, text);
+    }
+    $('#stop').click(function () {
+        sock.close()
+    });
+</script>
+<div id="output"></div>
+</body>
+</html>
